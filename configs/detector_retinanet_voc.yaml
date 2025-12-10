@@ -1,0 +1,42 @@
+task: detection
+dataset: voc
+
+model:
+  name: retinanet_resnet50_fpn
+  pretrained: false
+  pretrained_backbone: true
+  num_classes: 21  # 20 VOC classes + background
+  min_size: 600
+  max_size: 1000
+
+train:
+  epochs: 50
+  batch_size: 8
+  optimizer: sgd
+  lr: 0.01
+  momentum: 0.9
+  weight_decay: 0.0001
+  scheduler: multi_step
+  milestones: [30, 40]
+  gamma: 0.1
+  warmup_epochs: 1
+  warmup_factor: 0.001
+  amp: true
+  gradient_clip: 10.0
+
+data:
+  num_workers: 4
+  pin_memory: true
+  voc_year: "2007+2012"  # Can be "2007", "2012", or "2007+2012"
+  
+paths:
+  data_dir: ./data/VOCdevkit
+  output_dir: runs/retinanet_voc
+  log_dir: runs/retinanet_voc/logs
+
+eval:
+  batch_size: 8
+  iou_threshold: 0.5
+  
+seed: 42
+deterministic: false  # Detection training is typically non-deterministic for performance

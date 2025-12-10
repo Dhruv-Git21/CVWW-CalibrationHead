@@ -1,0 +1,44 @@
+task: classification
+dataset: cifar100
+
+model:
+  name: vit_tiny
+  pretrained: false
+  num_classes: 100
+  img_size: 32
+  patch_size: 4
+  drop_rate: 0.0
+  attn_drop_rate: 0.0
+  drop_path_rate: 0.1
+
+train:
+  epochs: 300
+  batch_size: 256
+  optimizer: adamw
+  lr: 0.0005
+  weight_decay: 0.05
+  scheduler: cosine
+  warmup_epochs: 10
+  amp: true
+  label_smoothing: 0.1
+  mixup_alpha: 0.8
+  cutmix_alpha: 1.0
+  gradient_clip: 1.0
+
+data:
+  num_workers: 4
+  pin_memory: true
+  randaugment: true
+  randaugment_n: 2
+  randaugment_m: 9
+
+paths:
+  data_dir: ./data
+  output_dir: runs/cifar_vit_tiny
+  log_dir: runs/cifar_vit_tiny/logs
+
+eval:
+  batch_size: 512
+  
+seed: 42
+deterministic: true

@@ -1,0 +1,40 @@
+task: classification
+dataset: cifar100
+
+model:
+  name: resnet50
+  pretrained: false
+  num_classes: 100
+
+train:
+  epochs: 5  # Just 5 epochs for quick testing
+  batch_size: 64  # Smaller batch for CPU
+  optimizer: sgd
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0005
+  scheduler: cosine
+  warmup_epochs: 1
+  amp: true
+  label_smoothing: 0.1
+  mixup_alpha: 0.0
+  cutmix_alpha: 0.0
+  gradient_clip: 0.0
+
+data:
+  num_workers: 2  # Fewer workers for CPU
+  pin_memory: false
+  randaugment: true
+  randaugment_n: 2
+  randaugment_m: 10
+
+paths:
+  data_dir: ./data
+  output_dir: runs/cifar_resnet50_quick
+  log_dir: runs/cifar_resnet50_quick/logs
+
+eval:
+  batch_size: 128
+  
+seed: 42
+deterministic: true

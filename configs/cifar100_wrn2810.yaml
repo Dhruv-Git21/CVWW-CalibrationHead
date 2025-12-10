@@ -1,0 +1,40 @@
+task: classification
+dataset: cifar100
+
+model:
+  name: wide_resnet28_10
+  pretrained: false
+  num_classes: 100
+
+train:
+  epochs: 200
+  batch_size: 128
+  optimizer: sgd
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0005
+  scheduler: cosine
+  warmup_epochs: 5
+  amp: true
+  label_smoothing: 0.1
+  mixup_alpha: 1.0
+  cutmix_alpha: 1.0
+  gradient_clip: 0.0
+
+data:
+  num_workers: 4
+  pin_memory: true
+  randaugment: true
+  randaugment_n: 2
+  randaugment_m: 10
+
+paths:
+  data_dir: ./data
+  output_dir: runs/cifar_wrn2810
+  log_dir: runs/cifar_wrn2810/logs
+
+eval:
+  batch_size: 256
+  
+seed: 42
+deterministic: true

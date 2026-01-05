@@ -1,0 +1,35 @@
+data:
+  img_size: 64
+  num_workers: 8
+  pin_memory: true
+  randaugment: true
+  randaugment_m: 9
+  randaugment_n: 2
+dataset: imagefolder
+deterministic: true
+eval:
+  batch_size: 256
+model:
+  name: wide_resnet28_10
+  num_classes: 200
+  img_size: 64
+  pretrained: false
+paths:
+  data_dir: ./data/tiny-imagenet-200
+  log_dir: runs/tinyimagenet_wrn2810/logs
+  output_dir: runs/tinyimagenet_wrn2810
+seed: 42
+task: classification
+train:
+  amp: true
+  batch_size: 128
+  epochs: 200
+  gradient_clip: 1.0
+  label_smoothing: 0.1
+  lr: 0.1
+  momentum: 0.9
+  optimizer: sgd
+  scheduler: step
+  milestones: [60, 120, 160]
+  gamma: 0.2
+  weight_decay: 0.0005

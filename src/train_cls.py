@@ -198,13 +198,23 @@ def main():
         datamodule = CIFAR100DataModule(**datamodule_kwargs)
     elif dataset_name == 'imagefolder':
         # imagefolder datasets like Tiny-ImageNet
+        # Build kwargs compatible with ImageFolderDataModule (drop randaugment/use_randaugment)
+        img_size = data_config.get('img_size', config.get('model', {}).get('img_size', None))
+        image_kwargs = {
+            'data_dir': datamodule_kwargs.get('data_dir'),
+            'batch_size': datamodule_kwargs.get('batch_size'),
+            'num_workers': datamodule_kwargs.get('num_workers'),
+            'pin_memory': datamodule_kwargs.get('pin_memory'),
+            'val_split': datamodule_kwargs.get('val_split', 0.1),
+            'img_size': img_size,
+        }
         # Allow overriding subfolder names
-        datamodule_kwargs.update(
+        image_kwargs.update(
             train_dir=data_config.get('train_dir', 'train'),
             val_dir=data_config.get('val_dir', 'val'),
             test_dir=data_config.get('test_dir', 'test'),
         )
-        datamodule = ImageFolderDataModule(**datamodule_kwargs)
+        datamodule = ImageFolderDataModule(**image_kwargs)
     else:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
     
@@ -334,15 +344,19 @@ def main():
     # Final evaluation
     print("\n=== Final evaluation ===")
     test_loader = datamodule.test_dataloader()
-    test_metrics = evaluate(
-        model=model,
-        dataloader=test_loader,
-        criterion=criterion,
-        device=device,
-        desc='Test',
-    )
-    print(f"Test Acc@1: {test_metrics['acc1']:.2f}%")
-    print(f"Test Acc@5: {test_metrics['acc5']:.2f}%")
+    if test_loader is None:
+        print("No test dataset found — skipping final evaluation.")
+        test_metrics = None
+    else:
+        test_metrics = evaluate(
+            model=model,
+            dataloader=test_loader,
+            criterion=criterion,
+            device=device,
+            desc='Test',
+        )
+        print(f"Test Acc@1: {test_metrics['acc1']:.2f}%")
+        print(f"Test Acc@5: {test_metrics['acc5']:.2f}%")
     
     # Plot metrics
     metrics_logger.plot_metrics(output_dir / 'training_curves.png')

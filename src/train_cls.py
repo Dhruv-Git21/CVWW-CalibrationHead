@@ -22,6 +22,7 @@ from torch.utils.tensorboard import SummaryWriter
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.datasets.cifar100 import CIFAR100DataModule
+from src.datasets.cifar10 import CIFAR10DataModule
 from src.models.resnet import build_resnet_model
 from src.models.vit import build_vit_model
 from src.utils.common import (
@@ -173,7 +174,9 @@ def main():
     # Setup data
     print("\n=== Setting up data ===")
     data_config = config.get('data', {})
-    datamodule = CIFAR100DataModule(
+    dataset_name = config.get('dataset', 'cifar100').lower()
+
+    datamodule_kwargs = dict(
         data_dir=config['paths'].get('data_dir', './data'),
         batch_size=config['train']['batch_size'],
         num_workers=data_config.get('num_workers', 4),
@@ -183,6 +186,13 @@ def main():
         randaugment_n=data_config.get('randaugment_n', 2),
         randaugment_m=data_config.get('randaugment_m', 10),
     )
+
+    if dataset_name == 'cifar10':
+        datamodule = CIFAR10DataModule(**datamodule_kwargs)
+    elif dataset_name == 'cifar100':
+        datamodule = CIFAR100DataModule(**datamodule_kwargs)
+    else:
+        raise ValueError(f"Unsupported dataset: {dataset_name}")
     
     datamodule.prepare_data()
     datamodule.setup()

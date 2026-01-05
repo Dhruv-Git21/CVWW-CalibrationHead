@@ -23,6 +23,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from src.datasets.cifar100 import CIFAR100DataModule
 from src.datasets.cifar10 import CIFAR10DataModule
+from src.datasets.imagefolder import ImageFolderDataModule
 from src.models.resnet import build_resnet_model
 from src.models.vit import build_vit_model
 from src.utils.common import (
@@ -186,11 +187,24 @@ def main():
         randaugment_n=data_config.get('randaugment_n', 2),
         randaugment_m=data_config.get('randaugment_m', 10),
     )
+    # Add imagefolder-specific kwargs (img_size, train/val/test folder names)
+    img_size = data_config.get('img_size', config.get('model', {}).get('img_size', None))
+    if img_size is not None:
+        datamodule_kwargs['img_size'] = img_size
 
     if dataset_name == 'cifar10':
         datamodule = CIFAR10DataModule(**datamodule_kwargs)
     elif dataset_name == 'cifar100':
         datamodule = CIFAR100DataModule(**datamodule_kwargs)
+    elif dataset_name == 'imagefolder':
+        # imagefolder datasets like Tiny-ImageNet
+        # Allow overriding subfolder names
+        datamodule_kwargs.update(
+            train_dir=data_config.get('train_dir', 'train'),
+            val_dir=data_config.get('val_dir', 'val'),
+            test_dir=data_config.get('test_dir', 'test'),
+        )
+        datamodule = ImageFolderDataModule(**datamodule_kwargs)
     else:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
     

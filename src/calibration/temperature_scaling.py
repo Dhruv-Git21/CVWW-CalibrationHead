@@ -35,7 +35,9 @@ class TemperatureScaling(nn.Module):
         Returns:
             Scaled logits: logits / T
         """
-        return logits / self.temperature
+        # Ensure temperature is on the same device as logits
+        temperature = self.temperature.to(logits.device)
+        return logits / temperature
     
     def fit(self, model, val_loader, device='cuda', max_iter=50, lr=0.01):
         """
@@ -129,7 +131,9 @@ class CalibratedModel(nn.Module):
     def forward(self, x):
         """Forward pass with temperature scaling."""
         logits = self.model(x)
-        return logits / self.temperature
+        # Ensure temperature is on the same device as logits
+        temperature = self.temperature.to(logits.device)
+        return logits / temperature
 
 
 def compute_ece(probs, labels, n_bins=15):

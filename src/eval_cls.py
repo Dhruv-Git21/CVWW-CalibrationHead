@@ -48,12 +48,13 @@ def build_model(config):
     """Build model based on config."""
     model_config = config['model']
     model_name = model_config['name']
-    num_classes = model_config['num_classes']
-    
+    # Build kwargs excluding the model name to avoid duplicate keys
+    model_kwargs = {k: v for k, v in model_config.items() if k != 'name'}
+
     if model_name in ['resnet50', 'wide_resnet28_10']:
-        model = build_resnet_model(model_name, num_classes=num_classes, **model_config)
+        model = build_resnet_model(model_name, **model_kwargs)
     elif model_name in ['vit_tiny', 'deit_tiny']:
-        model = build_vit_model(model_name, num_classes=num_classes, **model_config)
+        model = build_vit_model(model_name, **model_kwargs)
     else:
         raise ValueError(f"Unknown model: {model_name}")
     

@@ -20,6 +20,7 @@ import seaborn as sns
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.datasets.cifar100 import CIFAR100DataModule
+from src.datasets.cifar10 import CIFAR10DataModule
 from src.models.resnet import build_resnet_model
 from src.models.vit import build_vit_model
 from src.utils.common import seed_everything, load_checkpoint, get_device
@@ -49,11 +50,13 @@ def build_model(config):
     model_config = config['model']
     model_name = model_config['name']
     num_classes = model_config['num_classes']
-    
+    # Avoid passing 'num_classes' twice (it may be present in model_config)
+    model_kwargs = {k: v for k, v in model_config.items() if k != 'num_classes'}
+
     if model_name in ['resnet50', 'wide_resnet28_10']:
-        model = build_resnet_model(model_name, num_classes=num_classes, **model_config)
+        model = build_resnet_model(model_name, num_classes=num_classes, **model_kwargs)
     elif model_name in ['vit_tiny', 'deit_tiny']:
-        model = build_vit_model(model_name, num_classes=num_classes, **model_config)
+        model = build_vit_model(model_name, num_classes=num_classes, **model_kwargs)
     else:
         raise ValueError(f"Unknown model: {model_name}")
     
@@ -135,7 +138,8 @@ def main():
     data_config = config.get('data', {})
     eval_config = config.get('eval', {})
     
-    datamodule = CIFAR100DataModule(
+    dataset_name = config.get('dataset', 'cifar100')
+    dm_kwargs = dict(
         data_dir=config['paths'].get('data_dir', './data'),
         batch_size=eval_config.get('batch_size', 256),
         num_workers=data_config.get('num_workers', 4),
@@ -143,6 +147,11 @@ def main():
         val_split=0.1,
         use_randaugment=False,  # No augmentation for eval
     )
+
+    if dataset_name.lower().startswith('cifar10') or dataset_name.lower() == 'cifar10':
+        datamodule = CIFAR10DataModule(**dm_kwargs)
+    else:
+        datamodule = CIFAR100DataModule(**dm_kwargs)
     
     datamodule.prepare_data()
     datamodule.setup()
@@ -190,7 +199,12 @@ def main():
     
     # Per-class accuracy
     per_class_acc = compute_per_class_accuracy(cm)
-    class_names = CIFAR100DataModule.get_class_names()
+    # Get class names from the appropriate datamodule
+    try:
+        class_names = datamodule.get_class_names()
+    except Exception:
+        # Fallback to CIFAR100 names
+        class_names = CIFAR100DataModule.get_class_names()
     
     print(f"\nPer-class accuracy (mean): {per_class_acc.mean():.4f}")
     print(f"Per-class accuracy (std): {per_class_acc.std():.4f}")
